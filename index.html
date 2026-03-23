@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>GEM RA Balance Assistant</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <main class="app">
+    <header>
+      <h1>German Equatorial RA Balance Assistant</h1>
+      <p>Adjust OTA and counterweights, then drag weights on the shaft to balance RA torque.</p>
+    </header>
+
+    <section class="controls">
+      <div class="card">
+        <h2 class="titleWithHelp">
+          Global Units
+          <button type="button" class="helpBtn" data-help="Choose metric or imperial units. All displayed values and sliders convert automatically." aria-label="Help: Global Units">?</button>
+        </h2>
+        <div class="row">
+          <label for="unitSystem" class="labelWithHelp">
+            Unit System
+            <button type="button" class="helpBtn" data-help="Metric uses kilograms and centimeters. Imperial uses pounds and inches." aria-label="Help: Unit System">?</button>
+          </label>
+          <select id="unitSystem">
+            <option value="metric" selected>Metric (kg, cm)</option>
+            <option value="imperial">Imperial (lb, in)</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2 class="titleWithHelp">
+          Telescope OTA
+          <button type="button" class="helpBtn" data-help="Set the optical tube assembly values on the telescope side of the RA axis. These values directly determine OTA torque." aria-label="Help: Telescope OTA">?</button>
+        </h2>
+        <div class="row">
+          <label for="otaWeight" class="labelWithHelp">
+            Weight
+            <button type="button" class="helpBtn" data-help="OTA mass used in balance calculations. Higher weight increases torque on the OTA side." aria-label="Help: OTA Weight">?</button>
+          </label>
+          <input id="otaWeight" type="number" min="0.1" step="0.1" value="5" />
+          <span id="otaWeightUnit" class="unitLabel">kg</span>
+        </div>
+        <div class="row">
+          <label for="otaDistance" class="labelWithHelp">
+            Distance from RA Axis
+            <button type="button" class="helpBtn" data-help="Distance from RA center to OTA center of mass. Larger distance increases OTA torque and moves the OTA circle farther out." aria-label="Help: OTA Distance">?</button>
+          </label>
+          <input id="otaDistance" type="number" min="1" step="0.5" value="15" />
+          <span id="otaDistanceUnit" class="unitLabel">cm</span>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2 class="titleWithHelp">
+          Counterweight Shaft
+          <button type="button" class="helpBtn" data-help="This is the usable RA counterweight bar length. It limits where counterweights can be placed." aria-label="Help: Counterweight Shaft">?</button>
+        </h2>
+        <div class="row">
+          <label for="shaftLength" class="labelWithHelp">
+            Shaft Length
+            <button type="button" class="helpBtn" data-help="Maximum distance available for counterweights from the RA axis on the shaft side." aria-label="Help: Shaft Length">?</button>
+          </label>
+          <input id="shaftLength" type="number" min="5" step="0.5" value="25" />
+          <span id="shaftLengthUnit" class="unitLabel">cm</span>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2 class="titleWithHelp">
+          Create Counterweight
+          <button type="button" class="helpBtn" data-help="Configure a new counterweight then add it to the shaft. You can drag placed weights to rebalance torque." aria-label="Help: Create Counterweight">?</button>
+        </h2>
+        <div class="row sliderRow">
+          <label for="newCwWeight" class="labelWithHelp">Weight <span id="newCwWeightValue">2.0</span> <span id="newCwWeightUnit">kg</span>
+            <button type="button" class="helpBtn" data-help="Counterweight mass used in torque calculations. It does not change the rendered block size." aria-label="Help: Counterweight Weight">?</button>
+          </label>
+          <input id="newCwWeight" type="range" min="0.5" max="10" step="0.1" value="2" />
+        </div>
+        <div class="row sliderRow">
+          <label for="newCwThickness" class="labelWithHelp">Thickness <span id="newCwThicknessValue">5.0</span> <span id="newCwThicknessUnit">cm</span>
+            <button type="button" class="helpBtn" data-help="Thickness controls physical occupied space on the shaft and visual block size. Wider thickness makes fitting and stacking harder." aria-label="Help: Counterweight Thickness">?</button>
+          </label>
+          <input id="newCwThickness" type="range" min="1" max="12" step="0.5" value="5" />
+        </div>
+        <button id="addCounterweight" type="button">Add Counterweight</button>
+      </div>
+    </section>
+
+    <section class="preview card">
+      <h2 class="titleWithHelp">
+        Interactive RA Axis Preview
+        <button type="button" class="helpBtn" data-help="Drag counterweights along the shaft to change their distance and torque. Distance and mass labels above each object update in real time." aria-label="Help: Preview">?</button>
+      </h2>
+      <div class="stats" id="stats"></div>
+      <div class="sceneWrap">
+        <svg id="scene" viewBox="0 0 900 500" role="img" aria-label="German equatorial mount balance preview">
+          <defs>
+            <linearGradient id="shaftGrad" x1="0" x2="1" y1="0" y2="0">
+              <stop offset="0" stop-color="#aeb8c2" />
+              <stop offset="1" stop-color="#7d8792" />
+            </linearGradient>
+          </defs>
+
+          <rect x="0" y="0" width="900" height="500" class="bg" />
+
+          <line id="shaftLine" x1="450" y1="250" x2="120" y2="250" class="shaft" stroke="url(#shaftGrad)" />
+
+          <circle cx="450" cy="250" r="32" class="axis" />
+          <circle cx="450" cy="250" r="7" class="axisCore" />
+
+          <circle id="otaCircle" cx="620" cy="250" r="138" class="otaCircle" />
+          <text id="otaText" x="620" y="250" class="otaText">OTA</text>
+          <text id="otaDistLabel" x="620" y="96" class="distLabel">15.0 cm</text>
+          <text id="otaWeightLabel" x="620" y="109" class="distLabel otaInfoLabel">5.0 kg</text>
+
+          <g id="weightLayer"></g>
+          <g id="labelLayer"></g>
+        </svg>
+      </div>
+      <p class="hint">Drag counterweights left/right along the shaft. Overlap is automatically prevented.</p>
+    </section>
+  </main>
+
+  <script src="script.js"></script>
+</body>
+</html>
